@@ -1,0 +1,12 @@
+{
+  "domain": "homey_energy_dongle",
+  "name": "Homey Energy Dongle",
+  "version": "1.0.1",
+  "documentation": "https://github.com/jou/homey-energy-dongle",
+  "issue_tracker": "https://github.com/jou/homey-energy-dongle/issues",
+  "requirements": ["websockets>=11.0"],
+  "config_flow": true,
+  "iot_class": "local_push",
+  "import_executor": true,
+  "codeowners": []
+}

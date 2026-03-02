@@ -1,46 +1,54 @@
-# Notice
+# Homey Energy Dongle – Home Assistant Custom Integration
 
-The component and platforms in this repository are not meant to be used by a
-user, but as a "blueprint" that custom component developers can build
-upon, to make more awesome stuff.
+Integreert de **Homey Energy Dongle** (P1 DSMR meter) als custom component in Home Assistant via WebSocket.
 
-HAVE FUN! 😎
+## Sensoren
 
-## Why?
+| Sensor | Eenheid | Omschrijving |
+|---|---|---|
+| Verbruik dal | kWh | Electriciteitsverbruik tarief 1 |
+| Verbruik piek | kWh | Electriciteitsverbruik tarief 2 |
+| Teruglevering dal | kWh | Zonnepanelen teruglevering tarief 1 |
+| Teruglevering piek | kWh | Zonnepanelen teruglevering tarief 2 |
+| Huidig verbruik | kW | Actueel vermogen verbruik |
+| Huidige teruglevering | kW | Actueel vermogen teruglevering |
+| Spanning L1/L2/L3 | V | Spanning per fase (standaard verborgen) |
+| Stroom L1/L2/L3 | A | Stroom per fase (standaard verborgen) |
+| Gasverbruik | m³ | Totaal gasverbruik |
+| Huidig tarief | — | `dal` of `piek` |
 
-This is simple, by having custom_components look (README + structure) the same
-it is easier for developers to help each other and for users to start using them.
+## Installatie
 
-If you are a developer and you want to add things to this "blueprint" that you think more
-developers will have use for, please open a PR to add it :)
+### Handmatig
 
-## What?
+1. Kopieer de map `homey_energy_dongle/` naar:
+   ```
+   <config>/custom_components/homey_energy_dongle/
+   ```
+2. Herstart Home Assistant.
+3. Ga naar **Instellingen → Integraties → Integratie toevoegen**.
+4. Zoek op **Homey Energy Dongle**.
+5. Voer het IP-adres van je dongle in.
 
-This repository contains multiple files, here is a overview:
+### Via HACS (als je de repo publiceert)
 
-File | Purpose | Documentation
--- | -- | --
-`.devcontainer.json` | Used for development/testing with Visual Studio Code. | [Documentation](https://code.visualstudio.com/docs/remote/containers)
-`.github/ISSUE_TEMPLATE/*.yml` | Templates for the issue tracker | [Documentation](https://help.github.com/en/github/building-a-strong-community/configuring-issue-templates-for-your-repository)
-`custom_components/integration_blueprint/*` | Integration files, this is where everything happens. | [Documentation](https://developers.home-assistant.io/docs/creating_component_index)
-`CONTRIBUTING.md` | Guidelines on how to contribute. | [Documentation](https://help.github.com/en/github/building-a-strong-community/setting-guidelines-for-repository-contributors)
-`LICENSE` | The license file for the project. | [Documentation](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/licensing-a-repository)
-`README.md` | The file you are reading now, should contain info about the integration, installation and configuration instructions. | [Documentation](https://help.github.com/en/github/writing-on-github/basic-writing-and-formatting-syntax)
-`requirements.txt` | Python packages used for development/lint/testing this integration. | [Documentation](https://pip.pypa.io/en/stable/user_guide/#requirements-files)
+1. Voeg de repository toe als custom repository in HACS.
+2. Installeer de integratie via HACS.
+3. Herstart Home Assistant en configureer via de UI.
 
-## How?
+## Vereisten
 
-1. Create a new repository in GitHub, using this repository as a template by clicking the "Use this template" button in the GitHub UI.
-1. Open your new repository in Visual Studio Code devcontainer (Preferably with the "`Dev Containers: Clone Repository in Named Container Volume...`" option).
-1. Rename all instances of the `integration_blueprint` to `custom_components/<your_integration_domain>` (e.g. `custom_components/awesome_integration`).
-1. Rename all instances of the `Integration Blueprint` to `<Your Integration Name>` (e.g. `Awesome Integration`).
-1. Run the `scripts/develop` to start HA and test out your new integration.
+- Home Assistant 2023.1 of nieuwer
+- Python package: `websockets>=11.0` (wordt automatisch geïnstalleerd)
+- Homey Energy Dongle bereikbaar op het lokale netwerk
 
-## Next steps
+## Probleemoplossing
 
-These are some next steps you may want to look into:
-- Add tests to your integration, [`pytest-homeassistant-custom-component`](https://github.com/MatthewFlamm/pytest-homeassistant-custom-component) can help you get started.
-- Add brand images (logo/icon) to https://github.com/home-assistant/brands.
-- Create your first release.
-- Share your integration on the [Home Assistant Forum](https://community.home-assistant.io/).
-- Submit your integration to [HACS](https://hacs.xyz/docs/publish/start).
+Zet logging aan in `configuration.yaml`:
+
+```yaml
+logger:
+  default: warning
+  logs:
+    custom_components.homey_energy_dongle: debug
+```

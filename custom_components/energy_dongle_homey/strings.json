@@ -1,0 +1,20 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Homey Energy Dongle instellen",
+        "description": "Voer het IP-adres in van je Homey Energy Dongle.",
+        "data": {
+          "ip_address": "IP-adres",
+          "mode": "Modus"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Kan geen verbinding maken met de Homey Energy Dongle. Controleer het IP-adres en of het apparaat bereikbaar is."
+    },
+    "abort": {
+      "already_configured": "Dit apparaat is al geconfigureerd."
+    }
+  }
+}

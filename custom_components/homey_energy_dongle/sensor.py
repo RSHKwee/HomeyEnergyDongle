@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import logging
-
-__all__ = ["async_setup_entry"]
 from dataclasses import dataclass
 from typing import Any, Callable
 
@@ -32,29 +30,40 @@ from .coordinator import HomeyEnergyCoordinator
 logger = logging.getLogger(__name__)
 
 
-def _get_elec(key: str) -> Callable[[dict], Any]:
-    """Helper: haal een electriciteitswaarde op uit de data."""
-    def getter(data: dict) -> Any:
+def _get_elec(key: str) -> Callable[[dict[str, Any]], Any]:
+    """Geef een getter terug voor een electriciteitswaarde."""
+    def getter(data: dict[str, Any]) -> Any:
         value = data.get("electricity", {}).get(key)
+        if value is None:
+            return None
         if isinstance(value, dict):
             return value.get("value")
-        return value
+        if isinstance(value, (int, float)):
+            return value
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return value
     return getter
 
 
-def _get_gas_delivered(data: dict) -> Any:
-    """Haal gasverbruik op."""
+def _get_gas_delivered(data: dict[str, Any]) -> float | None:
+    """Geef het totale gasverbruik terug."""
     gas = data.get("gas", {}).get("delivered")
     if isinstance(gas, dict):
         return gas.get("value")
     return None
 
 
-def _get_tariff(data: dict) -> Any:
-    """Haal huidig tarief op als leesbare string."""
+def _get_tariff(data: dict[str, Any]) -> str | None:
+    """Geef het huidige tarief terug als leesbare string."""
     tariff = data.get("electricity_tariff")
     if isinstance(tariff, dict):
         tariff = tariff.get("value")
+    try:
+        tariff = int(tariff)
+    except (TypeError, ValueError):
+        return None
     if tariff == 1:
         return "dal"
     if tariff == 2:
@@ -64,12 +73,13 @@ def _get_tariff(data: dict) -> Any:
 
 @dataclass(frozen=True, kw_only=True)
 class HomeyEnergySensorDescription(SensorEntityDescription):
-    """Uitgebreide sensor beschrijving met data getter."""
-    value_fn: Callable[[dict], Any] = lambda _: None
+    """Sensor beschrijving met data getter functie."""
+
+    value_fn: Callable[[dict[str, Any]], Any] = lambda _: None
 
 
 SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
-    # ── Elektriciteit: verbruik ────────────────────────────────────────────
+    # ── Verbruik ──────────────────────────────────────────────────────────
     HomeyEnergySensorDescription(
         key="electricity_delivered_1",
         name="Verbruik dal",
@@ -88,7 +98,7 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         icon="mdi:transmission-tower-import",
         value_fn=_get_elec("electricity_delivered_2"),
     ),
-    # ── Elektriciteit: teruglevering ───────────────────────────────────────
+    # ── Teruglevering ─────────────────────────────────────────────────────
     HomeyEnergySensorDescription(
         key="electricity_returned_1",
         name="Teruglevering dal",
@@ -107,7 +117,7 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         icon="mdi:transmission-tower-export",
         value_fn=_get_elec("electricity_returned_2"),
     ),
-    # ── Huidig vermogen ────────────────────────────────────────────────────
+    # ── Huidig vermogen totaal ────────────────────────────────────────────
     HomeyEnergySensorDescription(
         key="power_delivered",
         name="Huidig verbruik",
@@ -126,7 +136,59 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         icon="mdi:solar-power",
         value_fn=_get_elec("power_returned"),
     ),
-    # ── Spanning per fase ─────────────────────────────────────────────────
+    # ── Vermogen per fase ─────────────────────────────────────────────────
+    HomeyEnergySensorDescription(
+        key="power_delivered_l1",
+        name="Vermogen (fase 1)",
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_get_elec("power_delivered_l1"),
+    ),
+    HomeyEnergySensorDescription(
+        key="power_delivered_l2",
+        name="Vermogen (fase 2)",
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_get_elec("power_delivered_l2"),
+    ),
+    HomeyEnergySensorDescription(
+        key="power_delivered_l3",
+        name="Vermogen (fase 3)",
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_get_elec("power_delivered_l3"),
+    ),
+    HomeyEnergySensorDescription(
+        key="power_returned_l1",
+        name="Teruglevering (fase 1)",
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=_get_elec("power_returned_l1"),
+    ),
+    HomeyEnergySensorDescription(
+        key="power_returned_l2",
+        name="Teruglevering (fase 2)",
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=_get_elec("power_returned_l2"),
+    ),
+    HomeyEnergySensorDescription(
+        key="power_returned_l3",
+        name="Teruglevering (fase 3)",
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=_get_elec("power_returned_l3"),
+    ),
+    # ── Spanning per fase (verborgen: niet alle meters sturen dit) ─────────
     HomeyEnergySensorDescription(
         key="voltage_l1",
         name="Spanning L1",
@@ -161,7 +223,6 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=False,
         value_fn=_get_elec("current_l1"),
     ),
     HomeyEnergySensorDescription(
@@ -170,7 +231,6 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=False,
         value_fn=_get_elec("current_l2"),
     ),
     HomeyEnergySensorDescription(
@@ -179,18 +239,74 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=False,
         value_fn=_get_elec("current_l3"),
     ),
-    # ── Gas ───────────────────────────────────────────────────────────────
+    # ── Spanningsdips ─────────────────────────────────────────────────────
     HomeyEnergySensorDescription(
-        key="gas_delivered",
-        name="Gasverbruik",
-        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
-        device_class=SensorDeviceClass.GAS,
+        key="voltage_sags_l1",
+        name="Spanningsdips L1",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        icon="mdi:fire",
-        value_fn=_get_gas_delivered,
+        icon="mdi:flash-alert",
+        entity_registry_enabled_default=False,
+        value_fn=_get_elec("voltage_sags_l1"),
+    ),
+    HomeyEnergySensorDescription(
+        key="voltage_sags_l2",
+        name="Spanningsdips L2",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:flash-alert",
+        entity_registry_enabled_default=False,
+        value_fn=_get_elec("voltage_sags_l2"),
+    ),
+    HomeyEnergySensorDescription(
+        key="voltage_sags_l3",
+        name="Spanningsdips L3",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:flash-alert",
+        entity_registry_enabled_default=False,
+        value_fn=_get_elec("voltage_sags_l3"),
+    ),
+    # ── Spanningspieken ───────────────────────────────────────────────────
+    HomeyEnergySensorDescription(
+        key="voltage_swells_l1",
+        name="Spanningspieken L1",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:flash-alert-outline",
+        entity_registry_enabled_default=False,
+        value_fn=_get_elec("voltage_swells_l1"),
+    ),
+    HomeyEnergySensorDescription(
+        key="voltage_swells_l2",
+        name="Spanningspieken L2",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:flash-alert-outline",
+        entity_registry_enabled_default=False,
+        value_fn=_get_elec("voltage_swells_l2"),
+    ),
+    HomeyEnergySensorDescription(
+        key="voltage_swells_l3",
+        name="Spanningspieken L3",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:flash-alert-outline",
+        entity_registry_enabled_default=False,
+        value_fn=_get_elec("voltage_swells_l3"),
+    ),
+    # ── Storingen ─────────────────────────────────────────────────────────
+    HomeyEnergySensorDescription(
+        key="power_failures",
+        name="Kortdurende storingen",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:power-plug-off",
+        entity_registry_enabled_default=False,
+        value_fn=lambda d: d.get("power_failures"),
+    ),
+    HomeyEnergySensorDescription(
+        key="long_power_failures",
+        name="Langdurige storingen",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:power-plug-off-outline",
+        entity_registry_enabled_default=False,
+        value_fn=lambda d: d.get("long_power_failures"),
     ),
     # ── Reactief vermogen ─────────────────────────────────────────────────
     HomeyEnergySensorDescription(
@@ -211,82 +327,7 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         entity_registry_enabled_default=False,
         value_fn=_get_elec("reactive_power_returned"),
     ),
-    # ── Spanningsdips per fase ────────────────────────────────────────────
-    HomeyEnergySensorDescription(
-        key="voltage_sags_l1",
-        name="Spanningsdips L1",
-        native_unit_of_measurement="count",
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        icon="mdi:flash-alert",
-        entity_registry_enabled_default=False,
-        value_fn=_get_elec("voltage_sags_l1"),
-    ),
-    HomeyEnergySensorDescription(
-        key="voltage_sags_l2",
-        name="Spanningsdips L2",
-        native_unit_of_measurement="count",
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        icon="mdi:flash-alert",
-        entity_registry_enabled_default=False,
-        value_fn=_get_elec("voltage_sags_l2"),
-    ),
-    HomeyEnergySensorDescription(
-        key="voltage_sags_l3",
-        name="Spanningsdips L3",
-        native_unit_of_measurement="count",
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        icon="mdi:flash-alert",
-        entity_registry_enabled_default=False,
-        value_fn=_get_elec("voltage_sags_l3"),
-    ),
-    # ── Spanningspieken per fase ──────────────────────────────────────────
-    HomeyEnergySensorDescription(
-        key="voltage_swells_l1",
-        name="Spanningspieken L1",
-        native_unit_of_measurement="count",
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        icon="mdi:flash-alert-outline",
-        entity_registry_enabled_default=False,
-        value_fn=_get_elec("voltage_swells_l1"),
-    ),
-    HomeyEnergySensorDescription(
-        key="voltage_swells_l2",
-        name="Spanningspieken L2",
-        native_unit_of_measurement="count",
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        icon="mdi:flash-alert-outline",
-        entity_registry_enabled_default=False,
-        value_fn=_get_elec("voltage_swells_l2"),
-    ),
-    HomeyEnergySensorDescription(
-        key="voltage_swells_l3",
-        name="Spanningspieken L3",
-        native_unit_of_measurement="count",
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        icon="mdi:flash-alert-outline",
-        entity_registry_enabled_default=False,
-        value_fn=_get_elec("voltage_swells_l3"),
-    ),
-    # ── Storingen ─────────────────────────────────────────────────────────
-    HomeyEnergySensorDescription(
-        key="power_failures",
-        name="Kortdurende storingen",
-        native_unit_of_measurement="count",
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        icon="mdi:power-plug-off",
-        entity_registry_enabled_default=False,
-        value_fn=lambda d: d.get("power_failures"),
-    ),
-    HomeyEnergySensorDescription(
-        key="long_power_failures",
-        name="Langdurige storingen",
-        native_unit_of_measurement="count",
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        icon="mdi:power-plug-off-outline",
-        entity_registry_enabled_default=False,
-        value_fn=lambda d: d.get("long_power_failures"),
-    ),
-    # ── Maximumtelling (Fluvius/België) ───────────────────────────────────
+    # ── Vermogensvraag (Fluvius/België) ───────────────────────────────────
     HomeyEnergySensorDescription(
         key="max_demand_active_import",
         name="Vermogensvraag (huidig kwartier)",
@@ -295,6 +336,16 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         value_fn=_get_elec("max_demand_active_import"),
+    ),
+    # ── Gas ───────────────────────────────────────────────────────────────
+    HomeyEnergySensorDescription(
+        key="gas_delivered",
+        name="Gasverbruik",
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        device_class=SensorDeviceClass.GAS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:fire",
+        value_fn=_get_gas_delivered,
     ),
     # ── Tarief ────────────────────────────────────────────────────────────
     HomeyEnergySensorDescription(
@@ -311,7 +362,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Stel sensor entities in."""
+    """Stel sensor entities in voor deze config entry."""
     coordinator: HomeyEnergyCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         HomeyEnergySensor(coordinator, description, entry)
@@ -331,6 +382,7 @@ class HomeyEnergySensor(CoordinatorEntity[HomeyEnergyCoordinator], SensorEntity)
         description: HomeyEnergySensorDescription,
         entry: ConfigEntry,
     ) -> None:
+        """Initialiseer de sensor."""
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
@@ -349,6 +401,10 @@ class HomeyEnergySensor(CoordinatorEntity[HomeyEnergyCoordinator], SensorEntity)
             return None
         try:
             return self.entity_description.value_fn(self.coordinator.data)
-        except Exception as e:
-            logger.debug(f"Fout bij ophalen waarde voor {self.entity_description.key}: {e}")
+        except Exception as err:  # noqa: BLE001
+            logger.debug(
+                "Fout bij ophalen waarde voor %s: %s",
+                self.entity_description.key,
+                err,
+            )
             return None

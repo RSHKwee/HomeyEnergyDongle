@@ -25,20 +25,14 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 async def _test_connection(ip_address: str) -> str | None:
-    """Test of er verbinding gemaakt kan worden. Geeft None terug bij succes, anders een foutcode."""
+    """Test de WebSocket verbinding. Geeft None bij succes, anders een foutcode."""
     uri = f"ws://{ip_address}:80/ws"
     try:
         async with asyncio.timeout(5):
             async with websockets.connect(uri) as ws:
-                # Wacht op eerste bericht om te bevestigen dat er data binnenkomt
                 await asyncio.wait_for(ws.recv(), timeout=4)
         return None
-    except asyncio.TimeoutError:
-        return "cannot_connect"
-    except ConnectionRefusedError:
-        return "cannot_connect"
-    except Exception as e:
-        logger.debug(f"Verbindingstest mislukt: {e}")
+    except Exception:  # noqa: BLE001
         return "cannot_connect"
 
 
@@ -54,13 +48,11 @@ class HomeyEnergyDongleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            ip_address = user_input[CONF_IP_ADDRESS].strip()
+            ip_address: str = user_input[CONF_IP_ADDRESS].strip()
 
-            # Controleer op dubbele entries
             await self.async_set_unique_id(ip_address)
             self._abort_if_unique_id_configured()
 
-            # Test de verbinding
             error_code = await _test_connection(ip_address)
             if error_code:
                 errors["base"] = error_code

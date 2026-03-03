@@ -1,20 +1,22 @@
-"""Homey Energy Dongle integratie voor Home Assistant."""
+"""Homey Energy Dongle integration for Home Assistant."""
 
 from __future__ import annotations
 
 import logging
-
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from typing import TYPE_CHECKING
 
 from .const import CONF_IP_ADDRESS, CONF_MODE, DEFAULT_MODE, DOMAIN, PLATFORMS
 from .coordinator import HomeyEnergyCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 logger = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Stel de integratie in vanuit een config entry."""
+    """Set up Homey Energy Dongle from a config entry."""
     ip_address: str = entry.data[CONF_IP_ADDRESS]
     mode: str = entry.data.get(CONF_MODE, DEFAULT_MODE)
 
@@ -27,12 +29,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     await coordinator.async_start()
-    logger.debug("Homey Energy Dongle gestart voor %s", ip_address)
+    logger.debug("Homey Energy Dongle started for %s", ip_address)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Verwijder een config entry netjes."""
+    """Unload a config entry."""
     coordinator: HomeyEnergyCoordinator = hass.data[DOMAIN][entry.entry_id]
     await coordinator.async_stop()
 

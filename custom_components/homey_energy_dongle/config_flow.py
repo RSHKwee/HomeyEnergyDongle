@@ -1,18 +1,19 @@
-"""Config flow voor Homey Energy Dongle."""
+"""Config flow for Homey Energy Dongle."""
 
 from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 import websockets
-
 from homeassistant import config_entries
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_IP_ADDRESS, CONF_MODE, DEFAULT_MODE, DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.data_entry_flow import FlowResult
 
 logger = logging.getLogger(__name__)
 
@@ -25,26 +26,27 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 async def _test_connection(ip_address: str) -> str | None:
-    """Test de WebSocket verbinding. Geeft None bij succes, anders een foutcode."""
+    """Test the WebSocket connection. Returns None on success, error code otherwise."""
     uri = f"ws://{ip_address}:80/ws"
     try:
         async with asyncio.timeout(5):
             async with websockets.connect(uri) as ws:
                 await asyncio.wait_for(ws.recv(), timeout=4)
-        return None
     except Exception:  # noqa: BLE001
         return "cannot_connect"
+    else:
+        return None
 
 
 class HomeyEnergyDongleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Config flow voor Homey Energy Dongle."""
+    """Config flow for Homey Energy Dongle."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Verwerk de gebruikersinvoer."""
+        """Handle the initial step."""
         errors: dict[str, str] = {}
 
         if user_input is not None:

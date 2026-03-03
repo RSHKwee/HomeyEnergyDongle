@@ -1,50 +1,81 @@
-# Homey Energy Dongle – Home Assistant Custom Integration
+# Homey Energy Dongle — Home Assistant Integration
 
-Integreert de **Homey Energy Dongle** (P1 DSMR meter) als custom component in Home Assistant via WebSocket.
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
+[![GitHub release](https://img.shields.io/github/release/RSHKwee/HomeyEnergyDongle.svg)](https://github.com/RSHKwee/HomeyEnergyDongle/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## Sensoren
+A Home Assistant custom integration for the **Homey Energy Dongle** (P1 DSMR smart meter interface) by Athom. Data is received in real time via WebSocket push — no polling.
 
-| Sensor | Eenheid | Omschrijving |
-|---|---|---|
-| Verbruik dal | kWh | Electriciteitsverbruik tarief 1 |
-| Verbruik piek | kWh | Electriciteitsverbruik tarief 2 |
-| Teruglevering dal | kWh | Zonnepanelen teruglevering tarief 1 |
-| Teruglevering piek | kWh | Zonnepanelen teruglevering tarief 2 |
-| Huidig verbruik | kW | Actueel vermogen verbruik |
-| Huidige teruglevering | kW | Actueel vermogen teruglevering |
-| Spanning L1/L2/L3 | V | Spanning per fase (standaard verborgen) |
-| Stroom L1/L2/L3 | A | Stroom per fase (standaard verborgen) |
-| Gasverbruik | m³ | Totaal gasverbruik |
-| Huidig tarief | — | `dal` of `piek` |
+## Features
 
-## Installatie
+- Real-time electricity consumption and feed-in
+- Gas consumption
+- Power per phase (L1/L2/L3)
+- Current per phase (L1/L2/L3)
+- Current tariff (off-peak / peak)
+- Voltage sags and swells per phase
+- Short and long power failures
+- Reactive power (where supported by meter)
+- Peak demand / quarter-hour demand (Fluvius/Belgium)
+- Automatic reconnection on connection loss
 
-### Handmatig
+## Sensors
 
-1. Kopieer de map `homey_energy_dongle/` naar:
-   ```
-   <config>/custom_components/homey_energy_dongle/
-   ```
-2. Herstart Home Assistant.
-3. Ga naar **Instellingen → Integraties → Integratie toevoegen**.
-4. Zoek op **Homey Energy Dongle**.
-5. Voer het IP-adres van je dongle in.
+| Sensor | Unit | Enabled by default |
+|---|---|:---:|
+| Consumption off-peak | kWh | ✅ |
+| Consumption peak | kWh | ✅ |
+| Feed-in off-peak | kWh | ✅ |
+| Feed-in peak | kWh | ✅ |
+| Current consumption | kW | ✅ |
+| Current feed-in | kW | ✅ |
+| Power phase 1 / 2 / 3 | kW | ✅ |
+| Current L1 / L2 / L3 | A | ✅ |
+| Gas consumption | m³ | ✅ |
+| Current tariff | off-peak/peak | ✅ |
+| Voltage L1 / L2 / L3 | V | ❌ |
+| Feed-in phase 1 / 2 / 3 | kW | ❌ |
+| Voltage sags L1 / L2 / L3 | — | ❌ |
+| Voltage swells L1 / L2 / L3 | — | ❌ |
+| Short power failures | — | ❌ |
+| Long power failures | — | ❌ |
+| Reactive power import / export | kvar | ❌ |
+| Peak demand (Fluvius) | kW | ❌ |
 
-### Via HACS (als je de repo publiceert)
+> **Note:** Voltage sensors are hidden by default because not all meters transmit voltage data. Enable them via **Settings → Devices & Services → Homey Energy Dongle → entities**.
 
-1. Voeg de repository toe als custom repository in HACS.
-2. Installeer de integratie via HACS.
-3. Herstart Home Assistant en configureer via de UI.
+## Requirements
 
-## Vereisten
+- Home Assistant 2024.1.0 or newer
+- Homey Energy Dongle reachable on your local network
+- Python package: `websockets >= 11.0` (installed automatically)
 
-- Home Assistant 2023.1 of nieuwer
-- Python package: `websockets>=11.0` (wordt automatisch geïnstalleerd)
-- Homey Energy Dongle bereikbaar op het lokale netwerk
+## Installation via HACS
 
-## Probleemoplossing
+1. Go to **HACS → Integrations → ⋮ → Custom repositories**
+2. Add `https://github.com/RSHKwee/HomeyEnergyDongle` as an **Integration**
+3. Install **Homey Energy Dongle**
+4. Restart Home Assistant
+5. Go to **Settings → Integrations → + Add integration**
+6. Search for **Homey Energy Dongle** and enter the IP address of your dongle
 
-Zet logging aan in `configuration.yaml`:
+## Manual installation
+
+1. Copy the `custom_components/homey_energy_dongle/` folder to your HA config directory
+2. Restart Home Assistant
+3. Configure via **Settings → Integrations → + Add integration**
+
+## Tested with
+
+| Meter | DSMR version |
+|---|---|
+| Landis+Gyr E350 (XMX5LGBBFFB) | 4.2 |
+
+Should work with any DSMR 4.x / 5.x meter connected via the Homey Energy Dongle.
+
+## Troubleshooting
+
+Enable debug logging in `configuration.yaml`:
 
 ```yaml
 logger:
@@ -52,3 +83,9 @@ logger:
   logs:
     custom_components.homey_energy_dongle: debug
 ```
+
+Then check **Settings → System → Logs** and filter on `HomeyEnergy`.
+
+## License
+
+MIT License — see [LICENSE](LICENSE) for details.

@@ -1,10 +1,10 @@
-"""Sensor platform voor Homey Energy Dongle."""
+"""Sensor platform for Homey Energy Dongle."""
 
 from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -20,18 +19,26 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import HomeyEnergyCoordinator
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
 logger = logging.getLogger(__name__)
+_TARIFF_DAL = 1
+_TARIFF_PIEK = 2
 
 
 def _get_elec(key: str) -> Callable[[dict[str, Any]], Any]:
-    """Geef een getter terug voor een electriciteitswaarde."""
+    """Return a getter for an electricity value."""
+
     def getter(data: dict[str, Any]) -> Any:
         value = data.get("electricity", {}).get(key)
         if value is None:
@@ -44,11 +51,12 @@ def _get_elec(key: str) -> Callable[[dict[str, Any]], Any]:
             return float(value)
         except (TypeError, ValueError):
             return value
+
     return getter
 
 
 def _get_gas_delivered(data: dict[str, Any]) -> float | None:
-    """Geef het totale gasverbruik terug."""
+    """Return total gas consumption."""
     gas = data.get("gas", {}).get("delivered")
     if isinstance(gas, dict):
         return gas.get("value")
@@ -56,7 +64,7 @@ def _get_gas_delivered(data: dict[str, Any]) -> float | None:
 
 
 def _get_tariff(data: dict[str, Any]) -> str | None:
-    """Geef het huidige tarief terug als leesbare string."""
+    """Return current tariff as a human-readable string."""
     tariff = data.get("electricity_tariff")
     if isinstance(tariff, dict):
         tariff = tariff.get("value")
@@ -64,22 +72,21 @@ def _get_tariff(data: dict[str, Any]) -> str | None:
         tariff = int(tariff)
     except (TypeError, ValueError):
         return None
-    if tariff == 1:
+    if tariff == _TARIFF_DAL:
         return "dal"
-    if tariff == 2:
+    if tariff == _TARIFF_PIEK:
         return "piek"
     return None
 
 
 @dataclass(frozen=True, kw_only=True)
 class HomeyEnergySensorDescription(SensorEntityDescription):
-    """Sensor beschrijving met data getter functie."""
+    """Sensor description with data getter function."""
 
     value_fn: Callable[[dict[str, Any]], Any] = lambda _: None
 
 
 SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
-    # ── Verbruik ──────────────────────────────────────────────────────────
     HomeyEnergySensorDescription(
         key="electricity_delivered_1",
         name="Verbruik dal",
@@ -98,7 +105,6 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         icon="mdi:transmission-tower-import",
         value_fn=_get_elec("electricity_delivered_2"),
     ),
-    # ── Teruglevering ─────────────────────────────────────────────────────
     HomeyEnergySensorDescription(
         key="electricity_returned_1",
         name="Teruglevering dal",
@@ -117,7 +123,6 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         icon="mdi:transmission-tower-export",
         value_fn=_get_elec("electricity_returned_2"),
     ),
-    # ── Huidig vermogen totaal ────────────────────────────────────────────
     HomeyEnergySensorDescription(
         key="power_delivered",
         name="Huidig verbruik",
@@ -136,7 +141,6 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         icon="mdi:solar-power",
         value_fn=_get_elec("power_returned"),
     ),
-    # ── Vermogen per fase ─────────────────────────────────────────────────
     HomeyEnergySensorDescription(
         key="power_delivered_l1",
         name="Vermogen (fase 1)",
@@ -188,7 +192,6 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         entity_registry_enabled_default=False,
         value_fn=_get_elec("power_returned_l3"),
     ),
-    # ── Spanning per fase (verborgen: niet alle meters sturen dit) ─────────
     HomeyEnergySensorDescription(
         key="voltage_l1",
         name="Spanning L1",
@@ -216,7 +219,6 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         entity_registry_enabled_default=False,
         value_fn=_get_elec("voltage_l3"),
     ),
-    # ── Stroom per fase ───────────────────────────────────────────────────
     HomeyEnergySensorDescription(
         key="current_l1",
         name="Stroom L1",
@@ -241,7 +243,6 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=_get_elec("current_l3"),
     ),
-    # ── Spanningsdips ─────────────────────────────────────────────────────
     HomeyEnergySensorDescription(
         key="voltage_sags_l1",
         name="Spanningsdips L1",
@@ -266,7 +267,6 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         entity_registry_enabled_default=False,
         value_fn=_get_elec("voltage_sags_l3"),
     ),
-    # ── Spanningspieken ───────────────────────────────────────────────────
     HomeyEnergySensorDescription(
         key="voltage_swells_l1",
         name="Spanningspieken L1",
@@ -291,7 +291,6 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         entity_registry_enabled_default=False,
         value_fn=_get_elec("voltage_swells_l3"),
     ),
-    # ── Storingen ─────────────────────────────────────────────────────────
     HomeyEnergySensorDescription(
         key="power_failures",
         name="Kortdurende storingen",
@@ -308,7 +307,6 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         entity_registry_enabled_default=False,
         value_fn=lambda d: d.get("long_power_failures"),
     ),
-    # ── Reactief vermogen ─────────────────────────────────────────────────
     HomeyEnergySensorDescription(
         key="reactive_power_delivered",
         name="Reactief vermogen import",
@@ -327,7 +325,6 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         entity_registry_enabled_default=False,
         value_fn=_get_elec("reactive_power_returned"),
     ),
-    # ── Vermogensvraag (Fluvius/België) ───────────────────────────────────
     HomeyEnergySensorDescription(
         key="max_demand_active_import",
         name="Vermogensvraag (huidig kwartier)",
@@ -337,7 +334,6 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         entity_registry_enabled_default=False,
         value_fn=_get_elec("max_demand_active_import"),
     ),
-    # ── Gas ───────────────────────────────────────────────────────────────
     HomeyEnergySensorDescription(
         key="gas_delivered",
         name="Gasverbruik",
@@ -347,7 +343,6 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         icon="mdi:fire",
         value_fn=_get_gas_delivered,
     ),
-    # ── Tarief ────────────────────────────────────────────────────────────
     HomeyEnergySensorDescription(
         key="electricity_tariff",
         name="Huidig tarief",
@@ -362,7 +357,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Stel sensor entities in voor deze config entry."""
+    """Set up sensor entities for this config entry."""
     coordinator: HomeyEnergyCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         HomeyEnergySensor(coordinator, description, entry)
@@ -371,7 +366,7 @@ async def async_setup_entry(
 
 
 class HomeyEnergySensor(CoordinatorEntity[HomeyEnergyCoordinator], SensorEntity):
-    """Sensor entity voor Homey Energy Dongle."""
+    """Sensor entity for Homey Energy Dongle."""
 
     entity_description: HomeyEnergySensorDescription
     _attr_has_entity_name = True
@@ -382,7 +377,7 @@ class HomeyEnergySensor(CoordinatorEntity[HomeyEnergyCoordinator], SensorEntity)
         description: HomeyEnergySensorDescription,
         entry: ConfigEntry,
     ) -> None:
-        """Initialiseer de sensor."""
+        """Initialize the sensor entity."""
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
@@ -396,15 +391,11 @@ class HomeyEnergySensor(CoordinatorEntity[HomeyEnergyCoordinator], SensorEntity)
 
     @property
     def native_value(self) -> Any:
-        """Geef de huidige sensorwaarde terug."""
+        """Return the current sensor value."""
         if not self.coordinator.data:
             return None
         try:
             return self.entity_description.value_fn(self.coordinator.data)
-        except Exception as err:  # noqa: BLE001
-            logger.debug(
-                "Fout bij ophalen waarde voor %s: %s",
-                self.entity_description.key,
-                err,
-            )
+        except Exception:  # noqa: BLE001
+            logger.debug("Error getting value for %s", self.entity_description.key)
             return None

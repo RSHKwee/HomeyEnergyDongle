@@ -6,8 +6,8 @@
 
 A Home Assistant custom integration for the **Homey Energy Dongle** (P1 DSMR smart meter interface) by Athom. Data is received in real time via WebSocket push — no polling.
 
-[![Validate with lint](https://github.com/RSHKwee/HomeyEnergyDongle/actions/workflows/lint.yml/badge.svg)](https://github.com/RSHKwee/HomeyEnergyDongle/actions/workflows/lint.yml)
-[![Validate with HACS and Hassfest](https://github.com/RSHKwee/HomeyEnergyDongle/actions/workflows/validate.yml/badge.svg)](https://github.com/RSHKwee/HomeyEnergyDongle/actions/workflows/validate.yml)
+[![Validate with lint](https://github.com/RSHKwee/HomeyEnergyDongle/actions/workflows/lint.yaml/badge.svg)](https://github.com/RSHKwee/HomeyEnergyDongle/actions/workflows/lint.yaml)
+[![Validate with HACS and Hassfest](https://github.com/RSHKwee/HomeyEnergyDongle/actions/workflows/validate.yaml/badge.svg)](https://github.com/RSHKwee/HomeyEnergyDongle/actions/workflows/validate.yaml)
 
 
 ## Features

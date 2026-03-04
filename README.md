@@ -1,7 +1,6 @@
 # Homey Energy Dongle — Home Assistant Integration
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
-[![GitHub release](https://img.shields.io/github/release/RSHKwee/HomeyEnergyDongle.svg)](https://github.com/RSHKwee/HomeyEnergyDongle/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 A Home Assistant custom integration for the **Homey Energy Dongle** (P1 DSMR smart meter interface) by Athom. Data is received in real time via WebSocket push — no polling.

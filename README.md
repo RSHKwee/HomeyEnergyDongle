@@ -6,6 +6,10 @@
 
 A Home Assistant custom integration for the **Homey Energy Dongle** (P1 DSMR smart meter interface) by Athom. Data is received in real time via WebSocket push — no polling.
 
+[![Validate with hassfest](https://github.com/RSHKwee/HomeyEnergyDongle/actions/workflows/hassfest.yaml/badge.svg)](https://github.com/weltmeyer/ha_sonnenbatterie/actions/workflows/hassfest.yaml)
+[![Validate with HACS](https://github.com/RSHKwee/HomeyEnergyDongle/actions/workflows/validate.yaml/badge.svg)](https://github.com/weltmeyer/ha_sonnenbatterie/actions/workflows/validate.yaml)
+
+
 ## Features
 
 - Real-time electricity consumption and feed-in

@@ -171,7 +171,6 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=False,
         value_fn=_get_elec("power_returned_l1"),
     ),
     HomeyEnergySensorDescription(
@@ -180,7 +179,6 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=False,
         value_fn=_get_elec("power_returned_l2"),
     ),
     HomeyEnergySensorDescription(
@@ -189,7 +187,6 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=False,
         value_fn=_get_elec("power_returned_l3"),
     ),
     HomeyEnergySensorDescription(
@@ -248,7 +245,6 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         name="Spanningsdips L1",
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:flash-alert",
-        entity_registry_enabled_default=False,
         value_fn=_get_elec("voltage_sags_l1"),
     ),
     HomeyEnergySensorDescription(
@@ -256,7 +252,6 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         name="Spanningsdips L2",
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:flash-alert",
-        entity_registry_enabled_default=False,
         value_fn=_get_elec("voltage_sags_l2"),
     ),
     HomeyEnergySensorDescription(
@@ -264,7 +259,6 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         name="Spanningsdips L3",
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:flash-alert",
-        entity_registry_enabled_default=False,
         value_fn=_get_elec("voltage_sags_l3"),
     ),
     HomeyEnergySensorDescription(
@@ -272,7 +266,6 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         name="Spanningspieken L1",
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:flash-alert-outline",
-        entity_registry_enabled_default=False,
         value_fn=_get_elec("voltage_swells_l1"),
     ),
     HomeyEnergySensorDescription(
@@ -280,7 +273,6 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         name="Spanningspieken L2",
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:flash-alert-outline",
-        entity_registry_enabled_default=False,
         value_fn=_get_elec("voltage_swells_l2"),
     ),
     HomeyEnergySensorDescription(
@@ -288,7 +280,6 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         name="Spanningspieken L3",
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:flash-alert-outline",
-        entity_registry_enabled_default=False,
         value_fn=_get_elec("voltage_swells_l3"),
     ),
     HomeyEnergySensorDescription(
@@ -296,7 +287,6 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         name="Kortdurende storingen",
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:power-plug-off",
-        entity_registry_enabled_default=False,
         value_fn=lambda d: d.get("power_failures"),
     ),
     HomeyEnergySensorDescription(
@@ -304,7 +294,6 @@ SENSOR_DESCRIPTIONS: tuple[HomeyEnergySensorDescription, ...] = (
         name="Langdurige storingen",
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:power-plug-off-outline",
-        entity_registry_enabled_default=False,
         value_fn=lambda d: d.get("long_power_failures"),
     ),
     HomeyEnergySensorDescription(
